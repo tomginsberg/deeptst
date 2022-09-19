@@ -16,7 +16,8 @@ import attr
 @attr.s(auto_attribs=True)
 class DetectronStruct:
     rejection_count: int = None
-    accuracy: float = None
+    base_accuracy: float = None,
+    detector_accuracy: float = None
     accepted_accuracy: float = None
     rejection_rate: float = None
     logits: torch.Tensor = None
@@ -25,7 +26,8 @@ class DetectronStruct:
     def to_dict(self, minimal: bool = False):
         if minimal:
             return {
-                'accuracy': self.accuracy,
+                'base_accuracy': self.base_accuracy,
+                'detector_accuracy': self.detector_accuracy,
                 'rejection_rate': self.rejection_rate,
                 'accepted_accuracy': self.accepted_accuracy,
             }
@@ -59,20 +61,24 @@ class DetectronModule(pl.LightningModule):
         logits = self.model(x)
         pred = logits.argmax(dim=1)
         reject_mask = ~torch.eq(pred, yhat)
-        correct = torch.eq(yhat, y)
-        return dict(logits=logits, reject_mask=reject_mask, correct=correct)
+        base_correct = torch.eq(yhat, y)
+        detector_correct = torch.eq(pred, y)
+        return dict(logits=logits, reject_mask=reject_mask, base_correct=base_correct,
+                    detector_correct=detector_correct)
 
     def test_epoch_end(self, outputs):
         logits = torch.cat([x['logits'] for x in outputs], dim=0)
         reject_mask = torch.cat([x['reject_mask'] for x in outputs], dim=0)
-        correct = torch.cat([x['correct'] for x in outputs], dim=0)
+        base_correct = torch.cat([x['base_correct'] for x in outputs], dim=0)
+        detector_correct = torch.cat([x['detector_correct'] for x in outputs], dim=0)
         self.test_struct = DetectronStruct(
             rejection_mask=reject_mask.cpu(),
             logits=logits.cpu(),
-            accuracy=correct.float().mean().item(),
+            base_accuracy=base_correct.float().mean().item(),
             rejection_count=reject_mask.float().sum().item(),
             rejection_rate=reject_mask.float().mean().item(),
-            accepted_accuracy=correct[~reject_mask].float().mean().item()
+            accepted_accuracy=base_correct[~reject_mask].float().mean().item(),
+            detector_accuracy=detector_correct.float().mean().item(),
         )
 
     def validation_step(self, batch, batch_idx):

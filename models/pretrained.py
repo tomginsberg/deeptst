@@ -3,6 +3,7 @@ from glob import glob
 from typing import Optional
 
 import torch
+import xgboost as xgb
 from tqdm import tqdm
 
 from models.classifier import TorchvisionClassifier, MLP
@@ -20,7 +21,7 @@ def to_device(device):
     return to_device_fn
 
 
-def all_camelyon_model(return_names=False, device='cuda:1', wilds=False, eval_=True):
+def camelyon_model_collection(return_names=False, device='cuda:1', wilds=False, eval_=True):
     to_device_fn = to_device(device)
     models = [to_device_fn(camelyon_model(seed=s, wilds=wilds)) for s in tqdm(range(10))]
     if eval_:
@@ -97,6 +98,21 @@ def mlp_collection_trained_on_uci_heart(return_names=False, device='cuda:1', eva
     if not return_names:
         return models
     return models, [f'uci_heart_seed{seed}' for seed in
+                    range(10)]
+
+
+def xgb_trained_on_uci_heart(seed=0):
+    bst = xgb.Booster()
+    bst.load_model(f'/voyager/datasets/UCI/xgb_{seed=}.model')
+    return bst
+
+
+def xgb_collection_trained_on_uci_heart(return_names=False):
+    models = [xgb_trained_on_uci_heart(seed) for seed in range(10)]
+
+    if not return_names:
+        return models
+    return models, [f'uci_heart_{seed=}' for seed in
                     range(10)]
 
 

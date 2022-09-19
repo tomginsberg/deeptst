@@ -34,6 +34,9 @@ class MaskedDataset(Dataset[T_co]):
         """
         self.indices = [self.indices[i] for i, m in enumerate(mask) if m]
 
+    def original(self):
+        return MaskedDataset(self.dataset, mask=False, pseudo_labels=self.pseudo_labels)
+
     def rest_index(self):
         self.indices = self.original_indices
 
@@ -156,5 +159,14 @@ class DetectronLoader(pl.LightningDataModule):
             self.train,
             shuffle=False,
             batch_size=self.batch_size,
+            num_workers=self.num_workers,
+        )
+
+    def q_dataloader(self):
+        original_q = self.q.original()
+        return DataLoader(
+            original_q,
+            shuffle=False,
+            batch_size=len(original_q),
             num_workers=self.num_workers,
         )
