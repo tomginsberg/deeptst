@@ -1,15 +1,14 @@
-from os.path import join
-
 import os
+from os.path import join
 
 import numpy as np
 import torch
+import xgboost as xgb
 from scipy.io import loadmat
+from torch.utils.data import TensorDataset
+from models.pretrained import xgb_trained_on_uci_heart
 
 from utils.config import Config
-from torch.utils.data import TensorDataset
-
-import xgboost as xgb
 
 
 def uci_heart(split='train', dataset_format='torch'):
@@ -53,9 +52,6 @@ def uci_heart_numpy():
     return loadmat(join(cfg.get_dataset_path('uci_heart'), 'uci_heart_processed.mat'))
 
 
-from models.pretrained import xgb_trained_on_uci_heart
-import pandas as pd
-
 DEFAULT_PARAMS = {
     'objective': 'binary:logistic',
     'eval_metric': 'auc',
@@ -68,12 +64,9 @@ DEFAULT_PARAMS = {
     'tree_method': 'gpu_hist'
 }
 
-DATA_NUMPY = uci_heart_numpy()
-DATA_XGB = uci_heart_xgb(data=DATA_NUMPY)
-BASE_MODEL = xgb_trained_on_uci_heart(seed=0)
 
-
-def train_and_test(data=DATA_XGB, params=DEFAULT_PARAMS, model_path='/voyager/datasets/UCI', n_seeds=10):
+def train_and_test(params=DEFAULT_PARAMS, model_path='/voyager/datasets/UCI', n_seeds=10):
+    data = uci_heart_xgb()
     # train <n_seeds> xgb models on the uci dataset and evaluate their in and out of distribution AUC
     iid_auc = []
     ood_auc = []

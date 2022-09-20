@@ -14,9 +14,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--run_name', type=str)
 parser.add_argument('--seeds', type=int, default=100)
 parser.add_argument('--samples', default=[10, 20, 50], nargs='+')
+parser.add_argument('--splits', default=['p', 'q'], nargs='+')
+parser.add_argument('--gpu', type=int, default=0)
 parser.add_argument('--resume', default=False, action='store_true')
 args = parser.parse_args()
-print(args)
 
 if os.path.exists(run_dir := os.path.join('results', args.run_name)) and not args.resume:
     raise ValueError(f'Run name <{args.run_name}> already exists')
@@ -40,7 +41,7 @@ ensemble_size = 10
 batch_size = 512
 patience = 2
 # ---------------------------------------------------------
-gpus = [0]
+gpus = [args.gpu]
 num_workers = 12
 # ---------------------------------------------------------
 
@@ -67,7 +68,7 @@ else:
 runs_id = 0
 runs_total = len(args.samples) * args.seeds * 2
 for N in map(int, args.samples):
-    for dataset_name in ['p', 'q']:
+    for dataset_name in args.splits:
         for seed in range(args.seeds):
 
             # setup save paths
