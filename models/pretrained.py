@@ -102,7 +102,17 @@ def mlp_collection_trained_on_uci_heart(return_names=False, device='cuda:1', eva
 
 
 def xgb_trained_on_uci_heart(seed=0):
-    bst = xgb.Booster()
+    bst = xgb.Booster({
+        'objective': 'binary:logistic',
+        'eval_metric': 'auc',
+        'eta': 0.1,
+        'max_depth': 6,
+        'subsample': 0.8,
+        'colsample_bytree': 0.8,
+        'min_child_weight': 1,
+        'nthread': 4,
+        'tree_method': 'gpu_hist'
+    })
     bst.load_model(f'/voyager/datasets/UCI/xgb_{seed=}.model')
     return bst
 
@@ -114,6 +124,23 @@ def xgb_collection_trained_on_uci_heart(return_names=False):
         return models
     return models, [f'uci_heart_{seed=}' for seed in
                     range(10)]
+
+
+def xgb_trained_on_cifar_features():
+    bst = xgb.Booster({
+        'objective': 'multi:softprob',
+        'eval_metric': 'merror',
+        'num_class': 10,
+        'eta': 0.1,
+        'max_depth': 6,
+        'subsample': 0.8,
+        'colsample_bytree': 0.8,
+        'min_child_weight': 1,
+        'nthread': 4,
+        'tree_method': 'gpu_hist',
+    })
+    bst.load_model('/voyager/datasets/cifar10_features/cifar10_features.model')
+    return bst
 
 
 def _to_binary_output(model):

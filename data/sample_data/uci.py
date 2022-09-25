@@ -6,12 +6,11 @@ import torch
 import xgboost as xgb
 from scipy.io import loadmat
 from torch.utils.data import TensorDataset
-from models.pretrained import xgb_trained_on_uci_heart
 
 from utils.config import Config
 
 
-def uci_heart(split='train', dataset_format='torch'):
+def uci_heart(split='train', dataset_format='torch', normalize=False):
     # wget https://github.com/tomginsberg/detectron/blob/main/data/uci_heart_torch.pt
     if split not in {'train', 'val', 'iid_test', 'ood_test'}:
         raise ValueError(f'Invalid split: {split}')
@@ -22,6 +21,10 @@ def uci_heart(split='train', dataset_format='torch'):
     data, labels = list(zip(*data))
     data = torch.stack(data)
     labels = torch.tensor(labels)
+    if normalize:
+        min_ = data.min(0).values
+        max_ = data.max(0).values
+        data = (data - min_) / (max_ - min_)
 
     if dataset_format == 'torch':
         return TensorDataset(data, labels)

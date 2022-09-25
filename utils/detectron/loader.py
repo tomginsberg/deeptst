@@ -20,7 +20,9 @@ class MaskedDataset(Dataset[T_co]):
 
     def __getitem__(self, index):
         index = self.indices[index]
-        x, y = self.dataset[index]
+        data = self.dataset[index]
+        x = data[0]
+        y = data[1]
         if self.pseudo_labels is not None:
             y_hat = self.pseudo_labels[index]
         else:

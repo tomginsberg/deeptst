@@ -10,7 +10,7 @@ class LabelCollector(pl.LightningModule):
         self.true_labels = []
 
     def validation_step(self, batch, batch_idx):
-        x, y = batch
+        x, y = batch[0], batch[1]
         y_hat: torch.Tensor = self.model(x).argmax(dim=1)
         self.predicted_labels.extend(y_hat.cpu().tolist())
         self.true_labels.extend(y.cpu().tolist())
