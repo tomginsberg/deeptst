@@ -29,6 +29,8 @@ else:
 
 load_model = lambda: pretrained.resnet18_trained_on_cifar10()
 p_train, p_val, p_test_all = sample_data.cifar10(split='all')
+p_train = [x for x in p_train]  # pre fetch
+p_test_all = [x for x in p_test_all]
 q_all = sample_data.cifar10_1()
 
 test_sets = {'p': p_test_all, 'q': q_all}
@@ -37,10 +39,10 @@ base_model = load_model()
 # hyperparams ---------------------------------------------
 max_epochs_per_model = 1
 optimizer = lambda params: torch.optim.Adam(params, lr=1e-3)
-ensemble_size = 1
+ensemble_size = 200
 batch_size = 512
 patience = 10
-train_batches = 2
+train_batches = 1
 # ---------------------------------------------------------
 gpus = [args.gpu]
 num_workers = 12
@@ -144,7 +146,7 @@ for N in map(int, args.samples):
                 # Note 1: we use lambda in the paper, but it is a reserved keyword, so we call it alpha here
                 # Note 2: we use a custom batch sampler which slightly changes the way you compute lambda
                 alpha = 1 / (train_batches * count + 1)
-                detector.alpha = alpha
+                detector.set_alpha(alpha)
                 print(f'α = {1000 * alpha:.3f} × 10⁻³')
 
                 # train the detectron model
@@ -153,19 +155,20 @@ for N in map(int, args.samples):
                 elapsed_time = time.time() - start_time
                 print(f'Elapsed time: {elapsed_time:.2f} s')
 
-                # evaluate the detectron model on the iid validation set
-                trainer.test(detector, pq_loader.val_dataloader(), verbose=False)
-                val_results.append(detector.test_struct.to_dict(minimal=True) | log)
+                # # evaluate the detectron model on the iid validation set
+                # trainer.test(detector, pq_loader.val_dataloader(), verbose=False)
+                # val_results.append(detector.test_struct.to_dict(minimal=True) | log)
 
                 # evaluate the detectron model on the filtered q dataset
                 trainer.test(detector, pq_loader.test_dataloader(), verbose=False)
-                count = pq_loader.refine(~detector.test_struct.rejection_mask, verbose=True)
+                count = pq_loader.refine(~detector.test_struct.rejection_mask, verbose=True,
+                                         symbol='Q' if dataset_name == 'q' else 'P')
                 test_results.append(detector.test_struct.to_dict() | {'count': count, 'runtime': elapsed_time} | log)
 
-                # evaluate the detectron model on the full q dataset
-                # (there is some redundancy here, but it makes the code much simpler)
-                trainer.test(detector, pq_loader.q_dataloader(), verbose=False)
-                test_results[-1].update({'logits': detector.test_struct.logits})
+                # # evaluate the detectron model on the full q dataset
+                # # (there is some redundancy here, but it makes the code much simpler)
+                # trainer.test(detector, pq_loader.q_dataloader(), verbose=False)
+                # test_results[-1].update({'logits': detector.test_struct.logits})
 
                 # early stopping check
                 if stopper.update(count):
@@ -178,5 +181,5 @@ for N in map(int, args.samples):
                     break
 
             # save the results
-            torch.save(val_results, os.path.join(run_dir, f'val_{seed}_{dataset_name}_{N}.pt'))
+            # torch.save(val_results, os.path.join(run_dir, f'val_{seed}_{dataset_name}_{N}.pt'))
             torch.save(test_results, os.path.join(run_dir, f'test_{seed}_{dataset_name}_{N}.pt'))

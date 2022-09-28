@@ -4,3 +4,4 @@ datasets:
   fake_mnist: /voyager/datasets/fake_mnist
   uci_heart: /voyager/datasets/UCI
   camelyon_quantized: /voyager/datasets/camelyon17
+  celeb: /voyager/datasets/CelebA

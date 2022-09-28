@@ -47,6 +47,9 @@ class DetectronModule(pl.LightningModule):
         self.test_struct = DetectronStruct()
         self.optim_func = optim_func
 
+    def set_alpha(self, alpha):
+        self.loss.alpha = alpha
+
     def training_step(self, batch, batch_idx):
         x, y_hat, y, mask = batch
         logits = self.model(x)

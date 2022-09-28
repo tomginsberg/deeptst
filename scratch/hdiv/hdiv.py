@@ -13,6 +13,7 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning import Trainer
 from glob import glob
 import random
+from models.cnn_vae import VAE as CNNVAE
 
 
 class VAE(pl.LightningModule):
@@ -127,6 +128,7 @@ if __name__ == '__main__':
     argparser.add_argument('--ckpt', type=str)
     argparser.add_argument('--dataset', type=str, default='uci')
     argparser.add_argument('--gpu', type=int, default=0)
+    argparser.add_argument('--cnn', default=False, action='store_true')
     args = argparser.parse_args()
 
     N = args.n
@@ -152,12 +154,12 @@ if __name__ == '__main__':
 
     def run(N, data, checkpoint=args.ckpt, gpu=args.gpu):
         dl = DataLoader(data, shuffle=True, batch_size=2 * N, num_workers=16)
-        model = VAE.load_from_checkpoint(checkpoint)
+        model = (CNNVAE if args.cnn else VAE).load_from_checkpoint(checkpoint)
         tr = pl.Trainer(gpus=[gpu],
                         max_epochs=50,
                         checkpoint_callback=None,
                         logger=False,
-                        enable_model_summary=False,
+                        enable_model_summary=True,
                         enable_checkpointing=False)
         tr.fit(model, dl)
         return tr.test(model, dl, verbose=False)[0]['test_loss']

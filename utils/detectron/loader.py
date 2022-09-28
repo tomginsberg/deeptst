@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from typing import Optional, Sized, Iterator
+from typing import Optional, Sized, Iterator, SupportsIndex
 
 import pytorch_lightning as pl
 from torch import BoolTensor
@@ -91,9 +91,9 @@ class PQSampler(BatchSampler):
 
 class DetectronLoader(pl.LightningDataModule):
     def __init__(self,
-                 p_train: Dataset,
-                 p_val: Dataset,
-                 q: Dataset,
+                 p_train: Dataset | list,
+                 p_val: Dataset | list,
+                 q: Dataset | list,
                  p_train_pseudo_labels: list,
                  p_val_pseudo_labels: list,
                  q_pseudo_labels: list,
@@ -120,10 +120,10 @@ class DetectronLoader(pl.LightningDataModule):
     def load_indices(self, path: str):
         self.q.load_indices(path)
 
-    def refine(self, mask: BoolTensor, verbose=True):
+    def refine(self, mask: BoolTensor, verbose=True, symbol='Q'):
         count = mask.float().sum().long().item()
         if verbose:
-            print(f'|Q| ({len(mask)} → {count})')
+            print(f'|{symbol}| ({len(mask)} → {count})')
 
         self.q.refine(mask)
         self.pq_sampler = PQSampler(

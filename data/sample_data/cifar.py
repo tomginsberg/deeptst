@@ -36,9 +36,10 @@ def cifar10(split='train', normalize=True, augment=False):
     if augment:
         transform.append(RandomCrop(32, padding=4))
         transform.append(RandomHorizontalFlip())
+
+    transform.append(ToTensor())
     if normalize:
         transform.append(Normalize(MEAN, STD))
-    transform.append(ToTensor())
 
     train, rest = [torchvision.datasets.CIFAR10(
         root=cfg.get_dataset_path('cifar10'),

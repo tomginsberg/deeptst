@@ -147,3 +147,7 @@ def _to_binary_output(model):
     assert hasattr(model.model, 'fc'), 'Model must have a fully connected layer named fc'
     model.model.fc = torch.nn.Linear(model.model.fc.in_features, 2)
     return model
+
+
+def resnet18_pretrained_celeb_pale_skin_for_male_classification():
+    return TorchvisionClassifier.load_from_checkpoint('checkpoints/celeb/resnet18-epoch=03-val_acc=0.98.ckpt')
