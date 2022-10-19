@@ -11,12 +11,21 @@ import argparse
 import time
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--run_name', type=str)
-parser.add_argument('--seeds', type=int, default=100)
-parser.add_argument('--samples', default=[10, 20, 50], nargs='+')
-parser.add_argument('--splits', default=['p', 'q'], nargs='+')
-parser.add_argument('--gpu', type=int, default=0)
-parser.add_argument('--resume', default=False, action='store_true')
+parser.add_argument('--run_name', type=str, help='Name of the run, data will be stored in results/args.run_name')
+parser.add_argument('--seeds', type=int, default=100, help='Number of seeds to run')
+parser.add_argument('--samples', default=[10, 20, 50], nargs='+', help='Number of samples to use for each dataset')
+parser.add_argument('--splits', default=['p', 'q'], nargs='+',
+                    help='Run on in or out of distribution data (p, q, or p q)')
+parser.add_argument('--gpu', type=int, default=0, help='ID of GPU to use')
+parser.add_argument('--resume', default=False, action='store_true', help='If not given and run_name exists, will error')
+parser.add_argument('--batch_size', type=int, default=512, help='Batch size for training detectron')
+parser.add_argument('--ensemble_size', type=int, default=5, help='Number of models in the ensemble')
+parser.add_argument('--max_epochs_per_model', type=int, default=5,
+                    help='Maximum number of training epochs per model in the ensemble')
+parser.add_argument('--patience', type=int, default=2,
+                    help='Patience for early stopping based on no improvement on rejection rate for k models')
+parser.add_argument('--num_workers', type=int, default=16, help='Number of workers for dataloader')
+parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 args = parser.parse_args()
 
 if os.path.exists(run_dir := os.path.join('results', args.run_name)) and not args.resume:
@@ -35,14 +44,14 @@ test_sets = {'p': p_test_all, 'q': q_all}
 base_model = load_model()
 
 # hyperparams ---------------------------------------------
-max_epochs_per_model = 5
-optimizer = lambda params: torch.optim.Adam(params, lr=1e-3)
-ensemble_size = 10
-batch_size = 512
-patience = 2
+max_epochs_per_model = args.max_epochs_per_model
+optimizer = lambda params: torch.optim.Adam(params, lr=args.lr)
+ensemble_size = args.ensemble_size
+batch_size = args.batch_size
+patience = args.patience
 # ---------------------------------------------------------
 gpus = [args.gpu]
-num_workers = 12
+num_workers = args.num_workers
 # ---------------------------------------------------------
 
 if os.path.exists(label_path := os.path.join(run_dir, 'pseudo_labels.pt')):
