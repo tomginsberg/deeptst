@@ -1,7 +1,4 @@
-import numpy as np
-import xgboost as xgb
-
-DEFAULT_PARAMS = {
+XGB_PARAMS = {
     'objective': 'binary:logistic',
     'eval_metric': 'auc',
     'eta': 0.1,
@@ -10,7 +7,5 @@ DEFAULT_PARAMS = {
     'colsample_bytree': 0.8,
     'min_child_weight': 1,
     'nthread': 4,
-    'tree_method': 'gpu_hist'
+    'tree_method': 'gpu_hist',
 }
-
-
