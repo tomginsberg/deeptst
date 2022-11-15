@@ -2,7 +2,7 @@ from typing import Any, Tuple
 
 import torch
 
-from .modules import DomainAdversarialNetwork
+from .modules import DomainAdversarialNetwork, DANNLoader
 from models import pretrained
 from models.classifier import TorchvisionClassifier
 from data.sample_data import cifar
@@ -14,7 +14,13 @@ import torchmetrics
 
 class DannCifar(pl.LightningModule):
 
-    def __int__(self, domain_penalty=1, featurizer_lr=0.001, classifier_lr=0.01, discriminator_lr=0.01):
+    def __int__(self,
+                domain_penalty=1,
+                featurizer_lr=0.001,
+                classifier_lr=0.01,
+                discriminator_lr=0.01,
+                batch_size=512,
+                num_workers=16):
         featurizer = pretrained.resnet18_trained_on_cifar10().model
         classifier = torch.nn.Linear(featurizer.fc.in_features, 10)
         featurizer.fc = torch.nn.Identity()
@@ -27,6 +33,12 @@ class DannCifar(pl.LightningModule):
         self.id_class_acc = torchmetrics.Accuracy()
         self.od_class_acc = torchmetrics.Accuracy()
         self.domain_acc = torchmetrics.Accuracy()
+
+        self.train_loader = DANNLoader(
+            train=cifar.cifar10(split='train', normalize=True, augment=False),
+            test=cifar.cifar10_1(normalize=True, format_spec='list'),
+            val=cifar.cifar10(split='val', normalize=True, augment=False)
+        )
 
     def forward(self, x) -> Tuple[torch.Tensor, torch.Tensor]:
         return self.dann(x)
