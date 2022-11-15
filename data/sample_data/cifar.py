@@ -58,7 +58,7 @@ def cifar10(split='train', normalize=True, augment=False):
     return train
 
 
-def cifar10_1(normalize=True):
+def cifar10_1(normalize=True, format_spec='list'):
     cfg = Config()
     root = cfg.get_dataset_path('cifar10_1')
     data = torch.from_numpy(np.load(join(root, 'cifar10.1_v6_data.npy'))) / 255
@@ -67,8 +67,10 @@ def cifar10_1(normalize=True):
         data = data.sub(torch.tensor(MEAN).view(3, 1, 1)).div(torch.tensor(STD).view(3, 1, 1))
     labels = np.load(join(root, 'cifar10.1_v6_labels.npy'))
     labels = torch.from_numpy(labels).long()
-    # return TensorDataset(data, labels)
-    return [(d, l.item()) for d, l in zip(data, labels)]
+    if format_spec == 'tensor_dataset':
+        return TensorDataset(data, labels)
+    if format_spec == 'list':
+        return [(d, l.item()) for d, l in zip(data, labels)]
 
 
 def cifar10_features(split='train'):
