@@ -6,6 +6,7 @@ import torch.nn
 import torchvision
 from torch.utils.data import TensorDataset, random_split
 from torchvision.transforms import Compose, Normalize, RandomCrop, RandomHorizontalFlip, ToTensor
+from itertools import product
 
 MEAN, STD = (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)
 
@@ -92,13 +93,12 @@ if __name__ == '__main__':
     test_sets = {'p': p_test_all, 'q': q_all}
 
     proj_norms = {x: {'p': [], 'q': []} for x in samples}
-    for N in samples:
-        for seed in range(seeds):
-            for test in ['p', 'q']:
-                q, _ = split_dataset(test_sets[test], random_seed=seed, num_samples=N)
-                proj_norm_val = compute_proj_norm(model, q)
-                print(f'N={N}, seed={seed}, test={test}, proj_norm={proj_norm_val}')
-                proj_norms[N][test].append(proj_norm_val)
+
+    for N, seed, test in product(samples, range(seeds), ['p', 'q']):
+        q, _ = split_dataset(test_sets[test], random_seed=seed, num_samples=N)
+        proj_norm_val = compute_proj_norm(model, q)
+        print(f'N={N}, seed={seed}, test={test}, proj_norm={proj_norm_val}')
+        proj_norms[N][test].append(proj_norm_val)
 
     df = pd.DataFrame(proj_norms)
     df.to_json('proj_norms_cifar.json')
