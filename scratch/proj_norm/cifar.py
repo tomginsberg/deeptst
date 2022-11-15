@@ -3,6 +3,7 @@ import numpy as np
 from data import sample_data
 from data.core import split_dataset
 from models import pretrained
+import pandas as pd
 
 model = pretrained.resnet18_trained_on_cifar10().model  # loads a resnet 18 model pretrained on cifar 10
 model.eval()
@@ -21,6 +22,7 @@ def compute_proj_norm(model, dataset):
 
 
 if __name__ == '__main__':
+    # parameters for the experiment
     samples = [10, 20, 50]
     seeds = 100
     alpha = 0.05
@@ -34,7 +36,11 @@ if __name__ == '__main__':
                 print(f'N={N}, seed={seed}, test={test}, proj_norm={proj_norm_val}')
                 proj_norms[N][test].append(proj_norm_val)
 
+    df = pd.DataFrame(proj_norms)
+    df.to_json('proj_norms_cifar.json')
+
     # find quantile on in dist data
+    print('-' * 60)
     for N in samples:
         thresh = np.quantile(proj_norms[N]['p'], alpha)
         power = (np.array(proj_norms[N]['q']) < thresh)
