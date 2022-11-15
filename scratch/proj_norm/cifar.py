@@ -20,21 +20,22 @@ def compute_proj_norm(model, dataset):
     return 0
 
 
-samples = [10, 20, 50]
-seeds = 100
-alpha = 0.05
+if __name__ == '__main__':
+    samples = [10, 20, 50]
+    seeds = 100
+    alpha = 0.05
 
-proj_norms = {x: {'p': [], 'q': []} for x in samples}
-for N in samples:
-    for seed in range(seeds):
-        for test in ['p', 'q']:
-            print(f'N={N}, seed={seed}, test={test}')
-            q, _ = split_dataset(test_sets[test], random_seed=seed, num_samples=N)
-            proj_norm_val = compute_proj_norm(model, q)
-            proj_norms[samples][test].append(proj_norm_val)
+    proj_norms = {x: {'p': [], 'q': []} for x in samples}
+    for N in samples:
+        for seed in range(seeds):
+            for test in ['p', 'q']:
+                print(f'N={N}, seed={seed}, test={test}')
+                q, _ = split_dataset(test_sets[test], random_seed=seed, num_samples=N)
+                proj_norm_val = compute_proj_norm(model, q)
+                proj_norms[N][test].append(proj_norm_val)
 
-# find quantile on in dist data
-for N in samples:
-    thresh = np.quantile(proj_norms[N]['p'], alpha)
-    power = (np.array(proj_norms[N]['q']) < thresh)
-    print(f'N={N}, power={power.mean()} +- {power.std() / np.sqrt(seeds)}')
+    # find quantile on in dist data
+    for N in samples:
+        thresh = np.quantile(proj_norms[N]['p'], alpha)
+        power = (np.array(proj_norms[N]['q']) < thresh)
+        print(f'N={N}, power={power.mean()} +- {power.std() / np.sqrt(seeds)}')
