@@ -29,9 +29,9 @@ if __name__ == '__main__':
     for N in samples:
         for seed in range(seeds):
             for test in ['p', 'q']:
-                print(f'N={N}, seed={seed}, test={test}')
                 q, _ = split_dataset(test_sets[test], random_seed=seed, num_samples=N)
                 proj_norm_val = compute_proj_norm(model, q)
+                print(f'N={N}, seed={seed}, test={test}, proj_norm={proj_norm_val}')
                 proj_norms[N][test].append(proj_norm_val)
 
     # find quantile on in dist data
