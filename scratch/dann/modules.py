@@ -1,8 +1,11 @@
 from typing import Any, Dict, List, Optional, Tuple
 
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from torch.autograd import Function
+
+from utils.detectron.loader import MaskedDataset
 
 
 class DomainDiscriminator(nn.Sequential):
@@ -117,3 +120,14 @@ class DomainAdversarialNetwork(nn.Module):
             {"params": self.classifier.parameters(), "lr": classifier_lr},
         ]
         return params + self.domain_classifier.get_parameters_with_lr(discriminator_lr)
+
+
+class DANNLoader(pl.LightningDataModule):
+    def __init__(self, train, val, test, batch_size, num_workers):
+        super().__init__()
+        self.train = MaskedDataset(train, mask=0)
+        self.val = MaskedDataset(test, mask=0)
+        self.test = MaskedDataset(test, mask=1)
+
+    def train_dataloader(self):
+        pass
