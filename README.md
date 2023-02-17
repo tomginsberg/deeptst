@@ -1,6 +1,6 @@
 ![](logo.svg)
 ___
-*Official implementation of the Detectron Two Sample Test for Harmful Covariate Shift*
+**This repository has move to [https://github.com/rgklab/detectron](https://github.com/rgklab/detectron)**
 
 ## Setup
 
