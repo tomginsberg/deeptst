@@ -1,6 +1,6 @@
 ![](logo.svg)
 ___
-**This repository has move to [https://github.com/rgklab/detectron](https://github.com/rgklab/detectron)**
+**This repository has moved to [https://github.com/rgklab/detectron](https://github.com/rgklab/detectron)**
 
 ## Setup
 
